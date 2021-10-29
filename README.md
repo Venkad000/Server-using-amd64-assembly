@@ -10,7 +10,7 @@ ld server.o -o server
 ./server
 ```
   
-#### Running the server:
+
   
 ```bash
 localhost:8888

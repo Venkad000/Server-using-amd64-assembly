@@ -44,6 +44,8 @@ section .data
         .sin_zero resb 8
     endstruc
 
+    buffer:  times 2048 db 0
+    variable_number: times 3 db 0
 
     file_path db "index.html",0
     file_read_error_message db "Error reading the file", 0x0a,0
@@ -76,11 +78,12 @@ section .data
         at sockaddr_in.sin_addr, dd 0
         at sockaddr_in.sin_zero, dd 0, 0
     iend
+
     sockaddr_in_len     equ $- serv
 
 section .bss
 
-    html resb 512
+    html resb 2048
     sock_descr  resb 2
     client_descr    resb 2
 
@@ -118,7 +121,7 @@ section .text
         mov rdi, rax
         xor rax, rax
         mov rsi, html
-        mov rdx, 512
+        mov rdx, 2048
         syscall
 
         cmp rax, 0
@@ -166,7 +169,7 @@ section .text
         mov rax, SYS_WRITE
         mov rdi, [client_descr]
         mov rsi, html
-        mov rdx, 512
+        mov rdx, 2048
         syscall
         ret
 

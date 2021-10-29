@@ -70,13 +70,13 @@ section .data
     connection db "Connection: close",0x0d,0x0a, 0
     connection_len equ $ - connection
 
-    pop_sa istruc sockaddr_in
+    serv istruc sockaddr_in
         at sockaddr_in.sin_family, dw 2
         at sockaddr_in.sin_port, dw 0xb822
         at sockaddr_in.sin_addr, dd 0
         at sockaddr_in.sin_zero, dd 0, 0
     iend
-    sockaddr_in_len     equ $- pop_sa
+    sockaddr_in_len     equ $- serv
 
 section .bss
 
@@ -90,22 +90,22 @@ section .text
 
 
     _start:
-        call _read_file
-        call _init_socket
-        call _listen
+        call read_file
+        call init_socket
+        call listen
 
         .mainloop:
-            call _accept;
-            call _return_html
+            call accept;
+            call return_html
         
             mov rdi, [client_descr]
-            call _close_sock
+            call close_sock
             mov word [client_descr], 0
         jmp .mainloop
 
-        call _exit
+        call exit
 
-    _read_file:
+    read_file:
         mov rax, SYS_OPEN
         mov rdi, file_path
         xor rsi, rsi
@@ -113,7 +113,7 @@ section .text
         syscall
 
         cmp rax, 0
-        jle _file_read_err
+        jle file_read_err
 
         mov rdi, rax
         xor rax, rax
@@ -122,47 +122,47 @@ section .text
         syscall
 
         cmp rax, 0
-        jle _file_read_err
+        jle file_read_err
         mov rax, 3
 
         syscall
 
         ret
 
-    _print:
+    print:
         mov rax, SYS_WRITE
         mov rdi, SYS_WRITE
         syscall
 
-    _exit:
+    exit:
         mov rax, SYS_EXIT
         xor rdi, rdi
         syscall
 
-    _file_read_err:
+    file_read_err:
         mov rsi, file_read_error_message;
         mov rdx, file_read_error_message_len
-        call _print
-        call _exit
+        call print
+        call exit
 
-    _socket_err:
+    socket_err:
         mov rsi, socket_error_message
         mov rdx, socket_error_message_len
-        call _print
-        call _exit
+        call print
+        call exit
 
-    _show_help:
+    show_help:
         mov rsi, help_message
         mov rdx, help_message_len
-        call _print
+        call print
 
-    _binding_err:
+    binding_err:
         mov rsi, binding_error_message
         mov rdx, binding_error_message_len
-        call _print
-        call _exit
+        call print
+        call exit
 
-    _return_html:
+    return_html:
         mov rax, SYS_WRITE
         mov rdi, [client_descr]
         mov rsi, html
@@ -170,7 +170,7 @@ section .text
         syscall
         ret
 
-    _init_socket:
+    init_socket:
         mov rax, SYS_SOCKET
         mov rdi, AF_INET
         mov rsi, SOCK_STREAM
@@ -178,31 +178,31 @@ section .text
         syscall
 
         cmp rax, 0
-        jle _socket_err
+        jle socket_err
 
         mov [sock_descr], rax
         ret
 
-    _listen:
+    listen:
         mov rax, SYS_BIND
         mov rdi, [sock_descr]
-        mov rsi, pop_sa
+        mov rsi, serv
         mov rdx, sockaddr_in_len
         syscall
 
         cmp rax, 0
-        jl _socket_err
+        jl socket_err
 
         mov rax, SYS_LISTEN
         mov rsi, 1
         syscall
 
         cmp rax, 0
-        jl _socket_err
+        jl socket_err
 
         ret
 
-    _accept:
+    accept:
         mov rax, SYS_ACCEPT
         mov rdi, [sock_descr]
         mov rsi, 0
@@ -210,14 +210,14 @@ section .text
         syscall
 
         cmp rax, 0
-        jl _socket_err
+        jl socket_err
 
         mov [client_descr], rax
 
         ret
         
 
-    _close_sock:
+    close_sock:
         mov rax, SYS_CLOSE
         syscall
         ret

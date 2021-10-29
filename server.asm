@@ -1,8 +1,8 @@
-%define AF_INET        2
-%define SOCK_STREAM    1
+%define AF_INET          2
+%define SOCK_STREAM      1
 
-%define SYS_WRITE 1
-%define SYS_EXIT       60  
+%define SYS_WRITE        1
+%define SYS_EXIT         60  
 %define SYS_SOCKET       41
 %define SYS_ACCEPT       43
 %define SYS_BIND         49
@@ -61,6 +61,14 @@ section .data
     http_200 db "HTTP/1.1 200 OK",0x0d,0x0a, 0
     http_200_len equ $ - http_200
 
+    contentType db "Content-Type: text/html; charset=utf-8",0x0d,0x0a, 0
+    contentType_len equ $ - contentType
+
+    contentLength db "Content-Length: "
+    contentLength_len equ $ - contentLength
+
+    connection db "Connection: close",0x0d,0x0a, 0
+    connection_len equ $ - connection
 
     pop_sa istruc sockaddr_in
         at sockaddr_in.sin_family, dw 2

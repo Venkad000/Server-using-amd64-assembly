@@ -1,16 +1,17 @@
-%define AF_INET          2
-%define SOCK_STREAM      1
+%define AF_INET           2
+%define SOCK_STREAM       1
 
-%define SYS_WRITE        1
-%define SYS_EXIT         60  
+%define SYS_WRITE         1
+%define SYS_OPEN          2 
+%define SYS_CLOSE         3 
+
+%define SYS_SENDFILE     40 
 %define SYS_SOCKET       41
 %define SYS_ACCEPT       43
 %define SYS_BIND         49
-%define SYS_LISTEN       50
-%define SYS_OPEN          2 
-%define SYS_CLOSE         3 
-%define SYS_SENDFILE     40
 
+%define SYS_EXIT         60 
+%define SYS_LISTEN       50
 
 %macro pushToStack 0
     push rdi 
@@ -126,7 +127,7 @@ section .text
 
         cmp rax, 0
         jle file_read_err
-        mov rax, 3
+        mov rax, SYS_CLOSE
 
         syscall
 

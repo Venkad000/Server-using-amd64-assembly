@@ -5,11 +5,13 @@ A simple server written in assembly language as part of my Assembly language cou
 #### To compile using nasm in linux:
 
 ``` bash
-    nasm -f elf64 server.asm
-    ld server.o -o server
-    ./server
+nasm -f elf64 server.asm
+ld server.o -o server
+./server
 ```
   
 #### Running the server:
   
-  `localhost:8888`
+```bash
+localhost:8888
+```

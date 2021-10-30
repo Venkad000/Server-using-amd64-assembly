@@ -1,5 +1,10 @@
-%define AF_INET           2
+
+; defining for sockets
+
+%define AF_INET           2 
 %define SOCK_STREAM       1
+
+; defining syscalls
 
 %define SYS_WRITE         1
 %define SYS_OPEN          2 
@@ -13,6 +18,8 @@
 %define SYS_EXIT         60 
 %define SYS_LISTEN       50
 
+; macros to push to stack in order to save values
+
 %macro pushToStack 0
     push rdi 
     push rsi
@@ -23,6 +30,8 @@
     push rbx
     push rcx
 %endmacro
+
+; macros to pop from stack in order to get back the pushed values
 
 %macro popStack 0
     pop rcs
@@ -35,8 +44,11 @@
     pop rdi
 %endmacro
 
+; data section
 
 section .data
+
+    ; struct for the sockaddr_in
 
     struc sockaddr_in
         .sin_family resw 1
@@ -45,13 +57,17 @@ section .data
         .sin_zero resb 8
     endstruc
 
-    buffer:  times 2048 db 0
+    buffer:  times 2048 db 0    ; The max size which can be read from the html file
     variable_number: times 3 db 0
 
-    file_path db "index.html",0
+    ; always reads from index.html
+
+    file_path db "index.html",0 
     file_read_error_message db "Error reading the file", 0x0a,0
     file_read_error_message_len equ $  - file_read_error_message
     
+    ; messages
+
     socket_error_message db "Failed to open socket", 0x0a,0
     socket_error_message_len equ $ - socket_error_message
 
@@ -94,8 +110,13 @@ section .text
 
 
     _start:
+
+        ; read the file
         call read_file
+
+        ; initialise the socket
         call init_socket
+        ; listen for connections
         call listen
 
         .mainloop:
@@ -109,11 +130,14 @@ section .text
 
         call exit
 
+    ; reading the file
+
     read_file:
         mov rax, SYS_OPEN
         mov rdi, file_path
         xor rsi, rsi
         mov rdx, 0
+        
         syscall
 
         cmp rax, 0
@@ -123,6 +147,7 @@ section .text
         xor rax, rax
         mov rsi, html
         mov rdx, 2048
+        
         syscall
 
         cmp rax, 0
@@ -133,40 +158,64 @@ section .text
 
         ret
 
-    print:
+    ; displays error message if failed to read the file "index.html"
+
+    file_read_err:
+
+        mov rsi, file_read_error_message;
+        mov rdx, file_read_error_message_len
+
         mov rax, SYS_WRITE
         mov rdi, SYS_WRITE
         syscall
 
-    exit:
         mov rax, SYS_EXIT
         xor rdi, rdi
         syscall
 
-    file_read_err:
-        mov rsi, file_read_error_message;
-        mov rdx, file_read_error_message_len
-        call print
-        call exit
+    ; displays error message if failed to open socket
 
     socket_err:
         mov rsi, socket_error_message
         mov rdx, socket_error_message_len
-        call print
-        call exit
+        
+        mov rax, SYS_WRITE
+        mov rdi, SYS_WRITE
+        syscall
+
+        mov rax, SYS_EXIT
+        xor rdi, rdi
+        syscall
+
+    ; shows help message
 
     show_help:
         mov rsi, help_message
         mov rdx, help_message_len
-        call print
+
+        mov rax, SYS_WRITE
+        mov rdi, SYS_WRITE
+        syscall
+
+    ; displays error message if there is an error in binding
 
     binding_err:
+
         mov rsi, binding_error_message
         mov rdx, binding_error_message_len
-        call print
-        call exit
+        
+        mov rax, SYS_WRITE
+        mov rdi, SYS_WRITE
+        syscall
+
+        mov rax, SYS_EXIT
+        xor rdi, rdi
+        syscall
+
+    ; returns the html file
 
     return_html:
+
         mov rax, SYS_WRITE
         mov rdi, [client_descr]
         mov rsi, html
@@ -174,7 +223,10 @@ section .text
         syscall
         ret
 
+    ; to initialise the socket
+
     init_socket:
+
         mov rax, SYS_SOCKET
         mov rdi, AF_INET
         mov rsi, SOCK_STREAM
@@ -187,7 +239,10 @@ section .text
         mov [sock_descr], rax
         ret
 
+    ; listening
+
     listen:
+
         mov rax, SYS_BIND
         mov rdi, [sock_descr]
         mov rsi, serv
@@ -206,7 +261,10 @@ section .text
 
         ret
 
+    ; the accept the incomming connection
+
     accept:
+
         mov rax, SYS_ACCEPT
         mov rdi, [sock_descr]
         mov rsi, 0
@@ -219,9 +277,11 @@ section .text
         mov [client_descr], rax
 
         ret
-        
+
+    ; close the socket   
 
     close_sock:
+
         mov rax, SYS_CLOSE
         syscall
         ret

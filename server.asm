@@ -128,7 +128,9 @@ section .text
             mov word [client_descr], 0
         jmp .mainloop
 
-        call exit
+        mov rax, SYS_EXIT
+        xor rdi, rdi
+        syscall
 
     ; reading the file
 
